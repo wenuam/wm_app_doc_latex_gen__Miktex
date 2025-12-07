@@ -1,0 +1,3 @@
+2025-12-06 16:29:17,917+0100 INFO  miktex-fc-cache - this process (1448) started by miktex in directory g:\_USERS\Kochise\Downloads with command line: miktex-fc-cache --verbose --miktex-disable-maintenance --miktex-disable-diagnose
+2025-12-06 16:29:17,918+0100 INFO  miktex-fc-cache - running on Windows 10.0.19045
+2025-12-06 16:29:24,737+0100 INFO  miktex-fc-cache - this process (1448) finishes with exit code 0
