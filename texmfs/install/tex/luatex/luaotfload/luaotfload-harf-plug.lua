@@ -4,8 +4,8 @@
 -----------------------------------------------------------------------
 assert(luaotfload_module, "This is a part of luaotfload and should not be loaded independently") {
   name          = "luaotfload-harf-plug",
-  version       = "3.26",       --TAGVERSION
-  date          = "2023-08-31", --TAGDATE
+  version       = "3.29",       --TAGVERSION
+  date          = "2024-12-03", --TAGDATE
   description   = "luaotfload submodule / HarfBuzz shaping",
   license       = "GPL v2.0",
   author        = "Khaled Hosny, Marcel Krüger",
@@ -23,8 +23,10 @@ local format            = string.format
 local open              = io.open
 local tableinsert       = table.insert
 local tableremove       = table.remove
-local ostmpname         = os.tmpname
+local ostmpdir          = os.tmpdir
 local osremove          = os.remove
+local dir               = lfs.dir
+local rmdir             = lfs.rmdir
 
 local direct            = node.direct
 local tonode            = direct.tonode
@@ -704,13 +706,17 @@ end
 
 -- Cache of color glyph PNG data for bookkeeping, only because I couldn't
 -- figure how to make the engine load the image from the binary data directly.
+local tmpdirname
+local tmpcount = 0
 local pngcache = {}
 local pngcachefiles = {}
 local function cachedpng(data)
   local hash = md5.sumhexa(data)
   local i = pngcache[hash]
   if not i then
-    local path = ostmpname()
+    tmpdirname = tmpdirname or ostmpdir()
+    tmpcount = tmpcount + 1
+    local path = format('%s/%i.png', tmpdirname, tmpcount)
     pngcachefiles[#pngcachefiles + 1] = path
     open(path, "wb"):write(data):close()
     -- local file = open(path, "wb"):write():close()
@@ -906,7 +912,7 @@ local function tonodes(head, node, run, glyphs)
               -- fonts, so we don't want them to reach the backend as it will cause
               -- a fatal error. We use `nullfont` instead.  That is a hack, but I
               -- think it is good enough for now. We could make the glyph virtual
-              -- with empty commands suh that LuaTeX ignores it, but we still want
+              -- with empty commands such that LuaTeX ignores it, but we still want
               -- a missing glyph warning.
               -- We insert the glyph node and move on, no further work is needed.
               setfont(node, 0)
@@ -1106,9 +1112,14 @@ end
 local function run_cleanup()
   -- Remove temporary PNG files that we created, if any.
   -- FIXME: It would be nice if we wouldn't need this
-  for _, path in next, pngcachefiles do
-    osremove(path)
+  if not tmpdirname then return end
+  for file in dir(tmpdirname) do
+    if file ~= '.' and file ~= '..' then
+      assert(osremove(format('%s/%s', tmpdirname, file)))
+    end
   end
+  assert(rmdir(tmpdirname))
+  tmpdirname = nil
 end
 
 local function set_tounicode()

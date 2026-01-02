@@ -7,7 +7,7 @@
 %% babel.dtx  (with options: `ca-chinese')
 %% 
 %%
-%% Copyright (C) 2012-2024 Javier Bezos and Johannes L. Braams.
+%% Copyright (C) 2012-2025 Javier Bezos and Johannes L. Braams.
 %% Copyright (C) 1989-2012 Johannes L. Braams and
 %%           any individual authors listed elsewhere in this file.
 %% All rights reserved.
@@ -32,19 +32,18 @@
 %% and covered by LPPL is defined by the unpacking scripts (with
 %% extension |.ins|) which are part of the distribution.
 %%
-
 \ExplSyntaxOn
 \def\bbl@fpmod#1#2{(#1-#2*floor(#1/#2))}
 \def\bbl@cs@gregleap#1{%
   (\bbl@fpmod{#1}{4} == 0) &&
     (!((\bbl@fpmod{#1}{100} == 0) && (\bbl@fpmod{#1}{400} != 0)))}
 \def\bbl@cs@jd#1#2#3{% year, month, day
-  \fp_eval:n{ 1721424.5   + (365 * (#1 - 1)) +
+  \fpeval{ 1721424.5   + (365 * (#1 - 1)) +
     floor((#1 - 1) / 4)   + (-floor((#1 - 1) / 100)) +
     floor((#1 - 1) / 400) + floor((((367 * #2) - 362) / 12) +
     ((#2 <= 2) ? 0 : (\bbl@cs@gregleap{#1} ? -1 : -2)) + #3) }}
 \def\bbl@ca@chinese#1-#2-#3\@@#4#5#6{%
-  \edef\bbl@tempd{\fp_eval:n{%
+  \edef\bbl@tempd{\fpeval{%
     \bbl@cs@jd{#1}{#2}{#3} - 2457072.5 }}%
   \count@\z@
   \@tempcnta=2015

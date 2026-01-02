@@ -22,7 +22,7 @@
 %% programming languages to Jobst Hoffmann at <j.hoffmann@fh-aachen.de>.
 %%
 \ProvidesFile{lstlang3.sty}
-    [2023/02/27 1.9 listings language file]
+    [2025/11/14 1.11b listings language file]
 \lst@definelanguage[68]{Algol}%
   {morekeywords={abs,and,arg,begin,bin,bits,bool,by,bytes,case,channel,%
       char,co,comment,compl,conj,divab,do,down,elem,elif,else,empty,%
@@ -124,7 +124,7 @@
    morecomment=[l]//,% missing comma: Markus Pahlow
    morecomment=[n]{/*}{*/},%
    morestring=[b]"%
-  }[keywords,comments,strings]%
+  }[keywords,comments,strings]
 \lst@definelanguage{CIL}{%
   morekeywords=[1]{assembly, beforefieldinit, class, default, cdecl, cil,%
     corflags, culture, custom, data, entrypoint, fastcall, field, file,%
@@ -161,7 +161,7 @@
   sensitive=true,%
   morecomment=[l]{//},%
   morestring=[b]"%
-}[keywords,comments,strings]%
+}[keywords,comments,strings]
 \lst@definelanguage{Comal 80}%
   {morekeywords={AND,AUTO,CASE,DATA,DEL,DIM,DIV,DO,ELSE,ENDCASE,ENDIF,%
       ENDPROC,ENDWHILE,EOD,EXEC,FALSE,FOR,GOTO,IF,INPUT,INT,LIST,LOAD,%
@@ -170,7 +170,7 @@
    sensitive=f,% ???
    morecomment=[l]//,%
    morestring=[d]"%
-  }[keywords,comments,strings]%
+  }[keywords,comments,strings]
 \lst@definelanguage[WinXP]{command.com}%
   {morekeywords={assoc,at,attrib,bootcfg,break,cacls,call,cd,chcp,chdir,%
       chkdsk,chkntfs,cls,cmd,cmdextversion,color,comp,compact,convert,copy,%
@@ -192,7 +192,7 @@
    morecomment=[l]{REm},%
    morecomment=[l]{REM},%
    morestring=[d]"%
-}[keywords,comments,strings]%
+}[keywords,comments,strings]
 \lst@definelanguage{Comsol}%
   {morekeywords={%
       adaption,arc1,arc2,arrayr,assemble,asseminit,beziercurve2,block2,%
@@ -292,7 +292,7 @@
    sensitive=false,%
    morecomment=[l]\%,%
    morestring=[m]'%
-  }[keywords,comments,strings]%
+  }[keywords,comments,strings]
 \lst@definelanguage{Elan}%
   {morekeywords={ABS,AND,BOOL,CAND,CASE,CAT,COLUMNS,CONCR,CONJ,CONST,%
       COR,DECR,DEFINES,DET,DIV,DOWNTO,ELIF,ELSE,END,ENDIF,ENDOP,%
@@ -310,7 +310,7 @@
       replacerow,replacecolumn,replaceelement,transp,errorsstop,stop},%
    sensitive,%
    morestring=[d]"%
-  }[keywords,strings]%
+  }[keywords,strings]
 %%
 %% Erlang definition (c) 2003 Daniel Gazard
 %%
@@ -329,7 +329,7 @@
    morecomment=[l]\%,%
    morestring=[b]",%
    morestring=[b]'%
-  }[keywords,comments,strings]%
+  }[keywords,comments,strings]
 %%
 %% Go definition
 %% (c) 2018 Christian Maurer
@@ -348,23 +348,31 @@
   morestring=[b]',%
   morestring=[b]",%
   morestring=[s]{`}{`},%
-}[keywords,comments,strings]%
-\lst@definelanguage{Scala}%
-  {morekeywords={abstract,case,catch,class,def,%
+}[keywords,comments,strings]
+\lst@definelanguage{Scala}{%
+  morekeywords={abstract,case,catch,class,def,%
     do,else,extends,false,final,finally,%
-    for,if,implicit,import,lazy,match,mixin,%
-    new,null,object,override,package,%
+    for,forSome,if,implicit,import,lazy,macro,match,%
+    mixin,new,null,object,override,package,%
     private,protected,requires,return,sealed,%
     super,this,trait,true,try,%
     type,val,var,while,with,yield},%+
-otherkeywords={=,=>,<-,<\%,<:,>:,\#,@},%
-   sensitive,%
-   morecomment=[l]//,%
-   morecomment=[n]{/*}{*/},%
-   morestring=[b]",%
-   morestring=[b]',%
-   morestring=[b]""",%
-  }[keywords,comments,strings]%
+  otherkeywords={_, :, =, =>, <-, <\%, <:, >:, \#, @},%
+  sensitive,%
+  morecomment=[l]//,%
+  morecomment=[n]{/*}{*/},%
+  morestring=[b]",%
+  morestring=[b]',%
+  morestring=[b]""",%
+}[keywords,comments,strings]
+\lst@definelanguage[3.0]{Scala}[]{Scala}{%
+  morekeywords={as, derives, end, enum, export, extension, given},
+  morekeywords=[2]{infix, inline, opaque, open, transparent}
+  otherkeywords={=>>, ?=>, =>}, % =>> isn't recognized, even after
+                                % the keyword => is deleted
+  alsoletter={*, +, -, |},
+  deletekeywords={<\%, _, forSome, macro, mixin, requires, this},
+}[keywords,comments,strings]
 \lst@definelanguage{ksh}
   {morekeywords={alias,awk,cat,echo,else,elif,fi,exec,exit,%
       for,in,do,done,select,case,esac,while,until,function,%
@@ -378,7 +386,7 @@ otherkeywords={=,=>,<-,<\%,<:,>:,\#,@},%
    morestring=[d]",%
    morestring=[d]',%
    morestring=[d]`%
-  }[keywords,comments,strings]%
+  }[keywords,comments,strings]
 \lst@definelanguage{Lingo}{%
   morekeywords={abort, after, and, before, do, down, halt, me, new, not,%
     of, on, or, otherwise, pass, put, result, return, set, tell, the, then,%
@@ -583,7 +591,7 @@ otherkeywords={=,=>,<-,<\%,<:,>:,\#,@},%
   sensitive=false,%
   morecomment=[l]{--},%
   morestring=[b]",%
-}[keywords,comments,strings]%
+}[keywords,comments,strings]
 \lst@definelanguage{LLVM}{%
   morekeywords={%
     ret,br,switch,indirectbr,invoke,resume,unreachable,%
@@ -744,7 +752,7 @@ otherkeywords={=,=>,<-,<\%,<:,>:,\#,@},%
    morecomment=[n]{(*}{*)},%
    morestring=[d]',%
    morestring=[d]"%
-  }[keywords,comments,strings]%
+  }[keywords,comments,strings]
 \lst@definelanguage{MuPAD}{%
    morekeywords={end,next,break,if,then,elif,else,end_if,case,end_case,%
       otherwise,for,from,to,step,downto,in,end_for,while,end_while,%
@@ -785,7 +793,7 @@ otherkeywords={=,=>,<-,<\%,<:,>:,\#,@},%
    morecomment=[n]{(*}{*)},%
    morestring=[d]',%
    morestring=[d]"%
-  }[keywords,comments,strings]%
+  }[keywords,comments,strings]
 %%
 %% OCL definition (c) 2000 Achim D. Brucker
 %%
@@ -813,7 +821,7 @@ otherkeywords={=,=>,<-,<\%,<:,>:,\#,@},%
     sensitive=t,%
     morecomment=[l]--,%
     morestring=[d]'%
-   }[keywords,comments,strings]%
+   }[keywords,comments,strings]
 \lst@definelanguage{Plasm}%
   {sensitive=false,%
    morekeywords={aa,abs,ac,acolor,acos,actor,al,alias,align,and,%
@@ -887,7 +895,7 @@ otherkeywords={=,=>,<-,<\%,<:,>:,\#,@},%
    morecomment=[s]{\%}{\%},%
    morestring=[b]',%
    literate={~}{{$\sim$}}{1} {^}{$\wedge$}{1},%
-  }[keywords,directives,comments,strings]%
+  }[keywords,directives,comments,strings]
 \lst@definelanguage{PL/I}{%
   morekeywords={ABS, ATAN, AUTOMATIC, AUTO, ATAND, BEGIN, BINARY, BIN, BIT,%
     BUILTIN, BY, CALL, CHARACTER, CHAR, CHECK, COLUMN, COL, COMPLEX, CPLX,%
@@ -905,7 +913,7 @@ otherkeywords={=,=>,<-,<\%,<:,>:,\#,@},%
   sensitive=f,%
   morecomment=[s]{/*}{*/},%
   morestring=[d]'%
-}[keywords,comments,strings]%
+}[keywords,comments,strings]
 %%
 %% PostScript language definition (c) 2005 Christophe Jorssen.
 %%
@@ -1166,7 +1174,50 @@ write,ws,wtlevel,%
   morecomment=[s]{COMMENT}{;},%
   morecomment=[s]{COMMENT}{$},%
   morestring="%
- }[keywords,comments,strings]%
+ }[keywords,comments,strings]
+%%
+%% RISC-V definition (c) 2025 Esing Zhang
+%%
+\lst@definelanguage[riscv]{Assembler}%
+  {morekeywords={add,addi,addw,addiw,sub,subw,and,andi,or,ori,xor,xori,%
+    sll,slli,sllw,slliw,srl,srli,srlw,srliw,sra,srai,sraw,sraiw,%
+    slt,slti,sltu,sltiu,lui,auipc,jal,jalr,beq,bne,blt,bge,bltu,bgeu,%
+    lb,lh,lw,ld,lbu,lhu,lwu,sb,sh,sw,sd,fence,fence.i,ecall,ebreak,%
+    csrrw,csrrs,csrrc,csrrwi,csrrsi,csrrci,mul,mulh,mulhsu,mulhu,%
+    mulw,div,divw,divu,divuw,rem,remw,remu,remuw,lr.w,sc.w,lr.d,sc.d,%
+    amoswap.w,amoadd.w,amoxor.w,amoand.w,amoor.w,amomin.w,amomax.w,%
+    amominu.w,amomaxu.w,amoswap.d,amoadd.d,amoxor.d,amoand.d,amoor.d,%
+    amomin.d,amomax.d,amominu.d,amomaxu.d,flw,fld,fsw,fsd,fmadd.s,%
+    fmsub.s,fnmsub.s,fnmadd.s,fadd.s,fsub.s,fmul.s,fdiv.s,fsqrt.s,%
+    fsgnj.s,fsgnjn.s,fsgnjx.s,fmin.s,fmax.s,fcvt.w.s,fcvt.wu.s,%
+    fmv.x.w,feq.s,flt.s,fle.s,fclass.s,fcvt.s.w,fcvt.s.wu,fmv.w.x,%
+    fmadd.d,fmsub.d,fnmsub.d,fnmadd.d,fadd.d,fsub.d,fmul.d,fdiv.d,%
+    fsqrt.d,fsgnj.d,fsgnjn.d,fsgnjx.d,fmin.d,fmax.d,fcvt.s.d,fcvt.d.s,%
+    feq.d,flt.d,fle.d,fclass.d,fcvt.w.d,fcvt.wu.d,fcvt.d.w,fcvt.d.wu,%
+    fcvt.l.s,fcvt.lu.s,fcvt.s.l,fcvt.s.lu,fcvt.l.d,fcvt.lu.d,%
+    fmv.x.d,fcvt.d.l,fcvt.d.lu,fmv.d.x},%
+  morekeywords=[2]{.align,.balign,.p2align,.ascii,.asciiz,.string,.byte,%
+    .half,.hword,.short,.word,.long,.dword,.quad,.octa,.float,.double,%
+    .space,.zero,.fill,.skip,.org,.set,.equ,.equiv,.eqv,.macro,.endm,%
+    .rept,.endr,.if,.ifdef,.ifndef,.else,.endif,.include,.globl,.global,%
+    .weak,.local,.extern,.type,.size,.section,.text,.data,.rodata,.bss,%
+    .file,.line,.loc,.cfi_startproc,.cfi_endproc,.cfi_def_cfa_offset,%
+    .cfi_offset,.option,.attribute,.insn},%
+  morekeywords=[3]{x0,zero,x1,ra,x2,sp,x3,gp,x4,tp,x5,t0,x6,t1,x7,t2,%
+    x8,s0,fp,x9,s1,x10,a0,x11,a1,x12,a2,x13,a3,x14,a4,x15,a5,%
+    x16,a6,x17,a7,x18,s2,x19,s3,x20,s4,x21,s5,x22,s6,x23,s7,%
+    x24,s8,x25,s9,x26,s10,x27,s11,x28,t3,x29,t4,x30,t5,x31,t6,%
+    f0,ft0,f1,ft1,f2,ft2,f3,ft3,f4,ft4,f5,ft5,f6,ft6,f7,ft7,%
+    f8,fs0,f9,fs1,f10,fa0,f11,fa1,f12,fa2,f13,fa3,f14,fa4,f15,fa5,%
+    f16,fa6,f17,fa7,f18,fs2,f19,fs3,f20,fs4,f21,fs5,f22,fs6,f23,fs7,%
+    f24,fs8,f25,fs9,f26,fs10,f27,fs11,f28,ft8,f29,ft9,f30,ft10,f31,ft11},
+  alsoletter=.,%
+  alsodigit=?,%
+  sensitive=f,%
+  morestring=[b]",%
+  morestring=[b]',%
+  morecomment=[l]\#
+}[keywords,comments,strings]
 %%
 %% RSL definition (c) 2004 Brian Christensen
 %%
@@ -1288,7 +1339,7 @@ literate=%
    keywordcommentsemicolon={end}{else,end,otherwise,when}{comment},%
    morestring=[d]",%
    morestring=[d]'%
-  }[keywords,keywordcomments,strings]%
+  }[keywords,keywordcomments,strings]
 %%
 %% SPARQL definition (c) 2006 Christoph Kiefer
 %%
@@ -1301,7 +1352,7 @@ literate=%
    morecomment=[l]\#,%
    morestring=[d]',%
    morestring=[d]"%
-  }[keywords,comments,strings]%
+  }[keywords,comments,strings]
 \lst@definelanguage{Swift}{%
   morekeywords={associatedtype,class,deinit,enum,extension,fileprivate,%
     func,import,init,inout,internal,let,open,operator,private,protocol,%
@@ -1684,7 +1735,7 @@ literate=%
    morecomment=[s]{/*}{*/},%
    morecomment=[l]//,% nonstandard
    morestring=[b]"%
-  }[keywords,comments,strings]%
+  }[keywords,comments,strings]
 \endinput
 %%
 %% End of file `lstlang3.sty'.

@@ -7,7 +7,7 @@
 %% babel.dtx  (with options: `ca-persian')
 %% 
 %%
-%% Copyright (C) 2012-2024 Javier Bezos and Johannes L. Braams.
+%% Copyright (C) 2012-2025 Javier Bezos and Johannes L. Braams.
 %% Copyright (C) 1989-2012 Johannes L. Braams and
 %%           any individual authors listed elsewhere in this file.
 %% All rights reserved.
@@ -32,14 +32,12 @@
 %% and covered by LPPL is defined by the unpacking scripts (with
 %% extension |.ins|) which are part of the distribution.
 %%
-
-\ExplSyntaxOn
 \def\bbl@fpmod#1#2{(#1-#2*floor(#1/#2))}
 \def\bbl@cs@gregleap#1{%
   (\bbl@fpmod{#1}{4} == 0) &&
     (!((\bbl@fpmod{#1}{100} == 0) && (\bbl@fpmod{#1}{400} != 0)))}
 \def\bbl@cs@jd#1#2#3{% year, month, day
-  \fp_eval:n{ 1721424.5   + (365 * (#1 - 1)) +
+  \fpeval{ 1721424.5   + (365 * (#1 - 1)) +
     floor((#1 - 1) / 4)   + (-floor((#1 - 1) / 100)) +
     floor((#1 - 1) / 400) + floor((((367 * #2) - 362) / 12) +
     ((#2 <= 2) ? 0 : (\bbl@cs@gregleap{#1} ? -1 : -2)) + #3) }}
@@ -50,24 +48,23 @@
   \ifnum\bbl@tempa>2012 \ifnum\bbl@tempa<2051
     \bbl@afterfi\expandafter\@gobble
   \fi\fi
-    {\bbl@error{Year~out~of~range}{The~allowed~range~is~2013-2050}}%
+    {\bbl@error{year-out-range}{2013-2050}{}{}}%
   \bbl@xin@{\bbl@tempa}{\bbl@cs@firstjal@xx}%
   \ifin@\def\bbl@tempe{20}\else\def\bbl@tempe{21}\fi
-  \edef\bbl@tempc{\fp_eval:n{\bbl@cs@jd{\bbl@tempa}{#2}{#3}+.5}}% current
-  \edef\bbl@tempb{\fp_eval:n{\bbl@cs@jd{\bbl@tempa}{03}{\bbl@tempe}+.5}}% begin
+  \edef\bbl@tempc{\fpeval{\bbl@cs@jd{\bbl@tempa}{#2}{#3}+.5}}% current
+  \edef\bbl@tempb{\fpeval{\bbl@cs@jd{\bbl@tempa}{03}{\bbl@tempe}+.5}}% begin
   \ifnum\bbl@tempc<\bbl@tempb
-    \edef\bbl@tempa{\fp_eval:n{\bbl@tempa-1}}% go back 1 year and redo
+    \edef\bbl@tempa{\fpeval{\bbl@tempa-1}}% go back 1 year and redo
     \bbl@xin@{\bbl@tempa}{\bbl@cs@firstjal@xx}%
     \ifin@\def\bbl@tempe{20}\else\def\bbl@tempe{21}\fi
-    \edef\bbl@tempb{\fp_eval:n{\bbl@cs@jd{\bbl@tempa}{03}{\bbl@tempe}+.5}}%
+    \edef\bbl@tempb{\fpeval{\bbl@cs@jd{\bbl@tempa}{03}{\bbl@tempe}+.5}}%
   \fi
-  \edef#4{\fp_eval:n{\bbl@tempa-621}}% set Jalali year
-  \edef#6{\fp_eval:n{\bbl@tempc-\bbl@tempb+1}}% days from 1 farvardin
-  \edef#5{\fp_eval:n{% set Jalali month
+  \edef#4{\fpeval{\bbl@tempa-621}}% set Jalali year
+  \edef#6{\fpeval{\bbl@tempc-\bbl@tempb+1}}% days from 1 farvardin
+  \edef#5{\fpeval{% set Jalali month
     (#6 <= 186) ? ceil(#6 / 31) : ceil((#6 - 6) / 30)}}
-  \edef#6{\fp_eval:n{% set Jalali day
+  \edef#6{\fpeval{% set Jalali day
     (#6 - ((#5 <= 7) ? ((#5 - 1) * 31) : (((#5 - 1) * 30) + 6)))}}}
-\ExplSyntaxOff
 \endinput
 %%
 %% End of file `babel-ca-persian.tex'.

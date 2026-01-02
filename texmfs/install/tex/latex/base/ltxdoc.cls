@@ -13,7 +13,7 @@
 %% (but please observe conditions on bug reports sent to that address!)
 %% 
 %% 
-%% Copyright (C) 1993-2024
+%% Copyright (C) 1993-2025
 %% The LaTeX Project and any individual authors listed elsewhere
 %% in this file.
 %% 
@@ -43,7 +43,7 @@
 %% extension .ins) which are part of the distribution.
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{ltxdoc}
-         [2023/03/28 v2.1j Standard LaTeX documentation class]
+         [2024/02/08 v2.1j Standard LaTeX documentation class]
 \DeclareOption{a5paper}{\@latexerr{Option not supported}%
    {}}
 \newif\ifltxdoc@load@cfg@ \ltxdoc@load@cfg@true

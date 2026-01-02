@@ -1,4 +1,7 @@
 local log = logging.new("mathmlfixes")
+
+local mathml_chardata = require "make4ht-mathml-char-def"
+
 -- <mglyph> should be inside <mi>, so we don't process it 
 -- even though it is  a token element
 local token = {"mi", "mn", "mo", "mtext", "mspace", "ms"}
@@ -35,9 +38,38 @@ local function update_element_name(el, name, prefix)
   el._name = newname
 end
 
-local function create_element(el, name, prefix)
-  return el:create_element(newname)
+local function create_element(el, name, prefix, attributes)
+  local attributes = attributes or {}
+  local newname = get_new_element_name(name, prefix)
+  return el:create_element(newname, attributes)
 end
+
+local function element_pos(el)
+  local pos, count = 0, 0
+  for _, node in ipairs(el:get_siblings()) do
+    if node:is_element() then
+      count = count + 1
+      if node == el then
+        pos = count
+      end
+    end
+  end
+  return pos, count
+end
+
+-- test if element is the first element in the current element list
+local function is_first_element(el)
+  local pos, count = element_pos(el)
+  return pos == 1 
+end
+
+-- test if element is the last element in the current element list
+local function is_last_element(el)
+  local pos, count = element_pos(el)
+  return pos == count
+end
+
+
 
 local function is_token_element(el)
   local name, prefix = get_element_name(el)
@@ -275,6 +307,14 @@ end
 local function fix_numbers(el)
   -- convert <mn>1</mn><mo>.</mo><mn>3</mn> to <mn>1.3</mn>
   if get_element_name(el) == "mn" then
+    -- sometimes minus sign can be outside <mn>
+    local x = el:get_sibling_node(-1)
+    if x and x:is_text()
+         and x:get_text() == "−" 
+    then
+      el:add_child_node(x:copy_node(), 1)
+      x:remove_node()
+    end
     local n = el:get_sibling_node(1)
     -- test if next  element is <mo class="MathClass-punc">.</mo>
     if n and n:is_element() 
@@ -357,18 +397,45 @@ local function fix_operators(x)
   end
 end
 
-local function is_last_element(el)
-  local siblings = el:get_siblings()
-  -- return true only if the current element is the last in the parent's children
-  for i = #siblings, 1, -1 do
-    local curr = siblings[i]
-    if curr == el then
-      return true
-    elseif curr:is_element() then
-      return false
-    end
-  end
-  return false
+local function get_third_parent(el)
+  local first = el:get_parent()
+  if not first then return nil end
+  local second = first:get_parent()
+  if not second then return nil end
+  return second:get_parent()
+end
+
+local function add_space(el, pos)
+  local parent = el:get_parent()
+  local name, prefix = get_element_name(el)
+  local space = create_element(parent, "mspace", prefix)
+  space:set_attribute("width", "0.3em")
+  parent:add_child_node(space, pos)
+end
+
+local function fix_dcases(el)
+	-- we need to fix spacing in dcases* environments
+	-- when you use something like:
+	-- \begin{dcases*}
+	-- 1 & if $a=b$ then
+	-- \end{dcases*}
+	-- the spaces around $a=b$ will be missing
+	-- we detect if the <mtext> elements contains spaces that are collapsed by the browser, and add explicit <mspace>
+	-- elements when necessary
+	if el:get_element_name() == "mtext" then
+		local parent = get_third_parent(el)
+		if parent and parent:get_element_name() == "mtable" and parent:get_attribute("class") == "dcases-star" then
+			local text = el:get_text()
+			local pos = el:find_element_pos()
+			if pos == 1 and text:match("%s$") then 
+				add_space(el, 2)
+			elseif text:match("^%s") and not el._used then
+				add_space(el, pos)
+				-- this is necessary to avoid infinite loop, we mark this element as processed
+				el._used = true
+			end
+		end
+	end
 end
 
 local function is_empty_row(el)
@@ -378,6 +445,9 @@ local function is_empty_row(el)
     for _, child in ipairs(el:get_children()) do
       if child:is_element() then count = count + 1 end
     end
+  else
+    -- row is not empty if it contains any text
+    return false
   end
   -- if there is one or zero childrens, then it is empty row
   return count < 2
@@ -398,6 +468,116 @@ local function delete_last_empty_mtr(el)
 
 end
 
+
+local function fix_mtable_hlines(mtable)
+  -- TeX4ht adds <mtr class="hline"> for hlines. we need to remove these <mtr> elements and construct 
+  -- correct "rowlines" attribute for horizontal lines
+  local hlines = {}
+  local rowlines = {}
+  local styles = {}
+  local el_name, prefix = get_element_name(mtable)
+  -- process only <mtable> elements
+  if el_name ~= "mtable" or  mtable:get_attribute("rowlines") then
+    -- if rowlines attribute is already set, we don't need to do anything
+    return
+  end
+  local mtrs = mtable:query_selector("mtr")
+  for count, mtr in ipairs(mtrs) do
+    local hline = mtr:get_attribute("class")
+    if hline and hline == "array-hline" then
+      table.insert(hlines, "hline")
+      -- we need to remove <mtr> elements that represent hlines, hlines will be displayed using the rowlines attribute
+      mtr:remove_node()
+    elseif count == #mtrs and hline == "array-row" and is_empty_row(mtr) then
+      -- ignore empty row that is inserted if \hline is at the end of the array
+      mtr:remove_node()
+    else
+      -- just keep the track of normal lines
+      table.insert(hlines, "")
+    end
+  end
+  -- now we need to construct rowlines attribute
+  for i, el in ipairs(hlines) do
+    if el == "hline" then
+      -- rowlines are used only inside the array. at the start and at the end, we need to use CSS
+      if i == 1 then
+        table.insert(styles, "border-top: 1px solid black;")
+      elseif i == #hlines then
+        table.insert(styles, "border-bottom: 1px solid black;")
+      else
+        table.insert(rowlines, "solid")
+      end
+    else
+      -- we need to detect rows that weren't separated by hlines. in that case, we need to insert none to rowlines
+      if i > 1 and i ~= #hlines then
+        if hlines[i-1] ~= "hline" then table.insert(rowlines, "none") end
+      end
+    end
+  end
+  mtable:set_attribute("rowlines", table.concat(rowlines, " "))
+  local style = mtable:get_attribute("style") or ""
+  mtable:set_attribute("style", style .. table.concat(styles, " "))
+end
+
+
+local function fix_rel_mo(el)
+  -- this is necessary for LibreOffice. It has a problem with relative <mo> that are
+  -- first childs in an element list. This often happens in equations, where first
+  -- element in a table column is an operator, like non-equal-, less-than etc.
+  local el_name, prefix = get_element_name(el)
+  if el_name == "mo" 
+     and not get_attribute(el, "fence") -- ignore fences
+     and not get_attribute(el, "form")  -- these should be also ignored
+     and not get_attribute(el, "accent") -- and accents too
+  then
+    local parent = el:get_parent()
+    if is_first_element(el) then
+      local mrow = create_element(parent, "mrow", prefix)
+      parent:add_child_node(mrow, 1)
+    elseif is_last_element(el) then
+      local mrow = create_element(parent, "mrow", prefix)
+      parent:add_child_node(mrow)
+    end
+  end
+
+end
+
+local uchar = utf8.char
+local ucodes = utf8.codes
+
+-- current version of MathML doesn't support the mathvariant attribute, so we need to replace unicode characters with the corresponding base code for the current font style
+local function replace_characters(math, current_style)
+  -- recursively loop over all the children of the math element and replace the unicode characters with the corresponding base code for the current font style
+  for _, child in ipairs(math:get_children()) do
+    if child:is_text() then
+      local text = child:get_text()
+      local new_text = {}
+      for _ ,char in ucodes(text) do
+        -- replace the unicode characters with the corresponding base code for the current font style
+        local code = mathml_chardata[char]
+        if code then
+          local new_char = code[current_style] or char
+          table.insert(new_text, uchar(new_char))
+        else
+          table.insert(new_text, uchar(char))
+        end
+      end
+      child._text = table.concat(new_text)
+    elseif child:is_element() then
+      local current_style = child:get_attribute("mathvariant") or current_style
+      replace_characters(child, current_style)
+    end
+  end
+end
+
+local function fix_mathml_chars(el)
+  local el_name, _ = get_element_name(el)
+  if el_name == "math" then
+    replace_characters(el, "normal")
+  end
+end
+
+
 return function(dom)
   dom:traverse_elements(function(el)
     if settings.output_format ~= "odt" then
@@ -405,7 +585,9 @@ return function(dom)
       fix_mfenced(el)
     else
       fix_mo_to_mfenced(el)
+      fix_rel_mo(el)
     end
+    fix_mtable_hlines(el)
     fix_radicals(el)
     fix_token_elements(el)
     fix_nested_mstyle(el)
@@ -413,6 +595,11 @@ return function(dom)
     fix_numbers(el)
     fix_operators(el)
     fix_mathvariant(el)
+    if settings.output_format ~= "odt" then
+      -- ODT needs older MathML version
+      fix_mathml_chars(el)
+    end
+    fix_dcases(el)
     top_mrow(el)
     delete_last_empty_mtr(el)
   end)

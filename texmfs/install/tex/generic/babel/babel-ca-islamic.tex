@@ -7,7 +7,7 @@
 %% babel.dtx  (with options: `ca-islamic')
 %% 
 %%
-%% Copyright (C) 2012-2024 Javier Bezos and Johannes L. Braams.
+%% Copyright (C) 2012-2025 Javier Bezos and Johannes L. Braams.
 %% Copyright (C) 1989-2012 Johannes L. Braams and
 %%           any individual authors listed elsewhere in this file.
 %% All rights reserved.
@@ -32,14 +32,12 @@
 %% and covered by LPPL is defined by the unpacking scripts (with
 %% extension |.ins|) which are part of the distribution.
 %%
-
-\ExplSyntaxOn
 \def\bbl@fpmod#1#2{(#1-#2*floor(#1/#2))}
 \def\bbl@cs@gregleap#1{%
   (\bbl@fpmod{#1}{4} == 0) &&
     (!((\bbl@fpmod{#1}{100} == 0) && (\bbl@fpmod{#1}{400} != 0)))}
 \def\bbl@cs@jd#1#2#3{% year, month, day
-  \fp_eval:n{ 1721424.5   + (365 * (#1 - 1)) +
+  \fpeval{ 1721424.5   + (365 * (#1 - 1)) +
     floor((#1 - 1) / 4)   + (-floor((#1 - 1) / 100)) +
     floor((#1 - 1) / 400) + floor((((367 * #2) - 362) / 12) +
     ((#2 <= 2) ? 0 : (\bbl@cs@gregleap{#1} ? -1 : -2)) + #3) }}
@@ -55,12 +53,12 @@
 \@namedef{bbl@ca@islamic-civil--}{\bbl@ca@islamicvl@x{-2}}
 \def\bbl@ca@islamicvl@x#1#2-#3-#4\@@#5#6#7{%
   \edef\bbl@tempa{%
-    \fp_eval:n{ floor(\bbl@cs@jd{#2}{#3}{#4})+0.5 #1}}%
+    \fpeval{ floor(\bbl@cs@jd{#2}{#3}{#4})+0.5 #1}}%
   \edef#5{%
-    \fp_eval:n{ floor(((30*(\bbl@tempa-1948439.5)) + 10646)/10631) }}%
-  \edef#6{\fp_eval:n{
+    \fpeval{ floor(((30*(\bbl@tempa-1948439.5)) + 10646)/10631) }}%
+  \edef#6{\fpeval{
     min(12,ceil((\bbl@tempa-(29+\bbl@cs@isltojd{#5}{1}{1}))/29.5)+1) }}%
-  \edef#7{\fp_eval:n{ \bbl@tempa - \bbl@cs@isltojd{#5}{#6}{1} + 1} }}
+  \edef#7{\fpeval{ \bbl@tempa - \bbl@cs@isltojd{#5}{#6}{1} + 1} }}
 \def\bbl@cs@umalqura@data{56660, 56690,56719,56749,56778,56808,%
   56837,56867,56897,56926,56956,56985,57015,57044,57074,57103,%
   57133,57162,57192,57221,57251,57280,57310,57340,57369,57399,%
@@ -99,8 +97,8 @@
   \ifnum#2>2014 \ifnum#2<2038
     \bbl@afterfi\expandafter\@gobble
   \fi\fi
-    {\bbl@error{Year~out~of~range}{The~allowed~range~is~2014-2038}}%
-  \edef\bbl@tempd{\fp_eval:n{ % (Julian) day
+    {\bbl@error{year-out-range}{2014-2038}{}{}}%
+  \edef\bbl@tempd{\fpeval{ % (Julian) day
     \bbl@cs@jd{#2}{#3}{#4} + 0.5 - 2400000 #1}}%
   \count@\@ne
   \bbl@foreach\bbl@cs@umalqura@data{%
@@ -109,12 +107,11 @@
       \edef\bbl@tempe{\the\count@}%
       \edef\bbl@tempb{##1}%
     \fi}%
-  \edef\bbl@templ{\fp_eval:n{ \bbl@tempe + 16260 + 949 }}% month~lunar
-  \edef\bbl@tempa{\fp_eval:n{ floor((\bbl@templ - 1 ) / 12) }}% annus
-  \edef#5{\fp_eval:n{ \bbl@tempa + 1  }}%
-  \edef#6{\fp_eval:n{ \bbl@templ - (12 * \bbl@tempa) }}%
-  \edef#7{\fp_eval:n{ \bbl@tempd - \bbl@tempb + 1 }}}
-\ExplSyntaxOff
+  \edef\bbl@templ{\fpeval{ \bbl@tempe + 16260 + 949 }}% month~lunar
+  \edef\bbl@tempa{\fpeval{ floor((\bbl@templ - 1 ) / 12) }}% annus
+  \edef#5{\fpeval{ \bbl@tempa + 1  }}%
+  \edef#6{\fpeval{ \bbl@templ - (12 * \bbl@tempa) }}%
+  \edef#7{\fpeval{ \bbl@tempd - \bbl@tempb + 1 }}}
 \bbl@add\bbl@precalendar{%
   \bbl@replace\bbl@ld@calendar{-civil}{}%
   \bbl@replace\bbl@ld@calendar{-umalqura}{}%

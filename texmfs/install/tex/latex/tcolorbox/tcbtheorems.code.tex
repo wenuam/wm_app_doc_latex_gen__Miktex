@@ -1,8 +1,8 @@
-%% The LaTeX package tcolorbox - version 6.2.0 (2024/01/10)
+%% The LaTeX package tcolorbox - version 6.9.0 (2025/11/28)
 %% tcbtheorems.code.tex: Code for theorems in colorboxes
 %%
 %% -------------------------------------------------------------------------------------------
-%% Copyright (c) 2006-2024 by Prof. Dr. Dr. Thomas F. Sturm <thomas dot sturm at unibw dot de>
+%% Copyright (c) 2006-2025 by Prof. Dr. Dr. Thomas F. Sturm <thomas dot sturm at unibw dot de>
 %% -------------------------------------------------------------------------------------------
 %%
 %% This work may be distributed and/or modified under the
@@ -18,7 +18,7 @@
 %% This work consists of all files listed in README
 %%
 %\makeatletter
-\tcb@set@library@version{6.2.0}
+\tcb@set@library@version{6.9.0}
 
 \RequirePackage{amsmath}
 
@@ -138,7 +138,7 @@
         % insert box with name and number
         \mode_leave_vertical:
         \box_use_drop:N \l__tcobox_tmpa_box
-        % insert formated title
+        % insert formatted title
         \group_begin:
           \__tcobox_theo_format_description:n{#3}
         \group_end:
@@ -260,10 +260,30 @@
     description~font/.default  =,
     description~formatter/.code =
       {
-        \cs_set_eq:NN \__tcobox_theo_format_description:n #1
+        \__tcobox_store_formatter_in:nN {#1} \__tcobox_theo_format_description:n
       },
     description~formatter/.default = \__tcobox_theo_format_description_standard:n,
   }
+
+
+\cs_if_exist:NF \__tcobox_store_formatter_in:nN
+  {
+    \cs_new_protected:Npn \__tcobox_store_formatter_in:nN #1#2
+      {
+        \__tcobox_if_single_cs:nTF {#1}
+          { \cs_set_eq:NN #2 #1 }
+          {
+            \tcb@error
+              {
+                Invalid~formatter~ "\tl_to_str:n {#1}" ~passed~to \MessageBreak
+                "\pgfkeyscurrentkey". \MessageBreak
+                A~formatter~should~be~a~single~command~taking~one \MessageBreak
+                mandatory~argument
+              }
+          }
+      }
+  }
+
 
 \ExplSyntaxOff
 
@@ -298,16 +318,16 @@
   ams equation*/.style={ams equation* upper,ams equation* lower},%
   ams align upper/.style={before upper*=\tcb@hack@amsmath\align,after upper*=\endalign},%
   ams align lower/.style={before lower*=\tcb@hack@amsmath\align,after lower*=\endalign},%
-  ams align/.style={ams align upper,ams align lower},%
+  ams align/.style={ams align upper},%
   ams align* upper/.style={before upper*=\tcb@hack@amsmath\csname align*\endcsname,after upper*=\endalign},%
   ams align* lower/.style={before lower*=\tcb@hack@amsmath\csname align*\endcsname,after lower*=\endalign},%
-  ams align*/.style={ams align* upper,ams align* lower},%
+  ams align*/.style={ams align* upper},%
   ams gather upper/.style={before upper*=\tcb@hack@amsmath\gather,after upper*=\endgather},%
   ams gather lower/.style={before lower*=\tcb@hack@amsmath\gather,after lower*=\endgather},%
-  ams gather/.style={ams gather upper,ams gather lower},%
+  ams gather/.style={ams gather upper},%
   ams gather* upper/.style={before upper*=\tcb@hack@amsmath\csname gather*\endcsname,after upper*=\endgather},%
   ams gather* lower/.style={before lower*=\tcb@hack@amsmath\csname gather*\endcsname,after lower*=\endgather},%
-  ams gather*/.style={ams gather* upper,ams gather* lower},%
+  ams gather*/.style={ams gather* upper},%
   ams nodisplayskip upper/.style={before upper=\vskip-\abovedisplayskip},%
   ams nodisplayskip lower/.style={before lower=\vskip-\abovedisplayskip},%
   ams nodisplayskip/.style={ams nodisplayskip upper,ams nodisplayskip lower},%

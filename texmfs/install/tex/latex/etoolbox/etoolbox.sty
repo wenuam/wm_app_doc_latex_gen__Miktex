@@ -12,7 +12,7 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{etoolbox}
-  [2020/10/05 v2.5k e-TeX tools for LaTeX (JAW)]
+  [2025/10/02 v2.5m e-TeX tools for LaTeX (JAW)]
 
 \begingroup
 \@ifundefined{eTeXversion}
@@ -62,7 +62,8 @@
 \def\etb@newcommand#1[#2]{%
   \@ifnextchar[%]
     {\etb@xargdef#1[#2]}
-    {\ifx\l@ngrel@x\relax
+    {\let\pr@tectedrel@x\protected
+     \ifx\l@ngrel@x\relax
        \let\l@ngrel@x\protected
      \else
        \protected\def\l@ngrel@x{\protected\long}%
@@ -880,7 +881,7 @@
 
 \ifdef\NewCommandCopy
   {%
-    \def\etb@carsquare#1#2#3\@nil{#1#2}
+    \long\def\etb@carsquare#1#2#3\@nil{#1#2}
     %
     % {<cstoken>}{<true>}{<false>}
     %

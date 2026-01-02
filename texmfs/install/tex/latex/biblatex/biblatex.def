@@ -479,9 +479,9 @@
   \ifcapital{\MakeCapital{#1}}{#1}\isdot}
 % citation commands
 \DeclareFieldFormat{prenote}{#1\isdot}
-\DeclareFieldFormat{postnote}{\mkpageprefix[pagination][\mknormrange]{#1}}
+\DeclareFieldFormat{postnote}{\mkpageprefix[pagination][\mkautorange]{#1}}
 \DeclareFieldFormat{volcitevolume}{\bibstring{volume}\ppspace#1}
-\DeclareFieldFormat{volcitepages}{\mkpageprefix[pagination][\mknormrange]{#1}}
+\DeclareFieldFormat{volcitepages}{\mkpageprefix[pagination][\mkautorange]{#1}}
 \DeclareFieldFormat{volcitenote}{\mkvolcitenote#1}
 \newrobustcmd*{\mkvolcitenote}[2]{%
   \printtext[volcitevolume]{#1}%
@@ -1260,7 +1260,7 @@
 % We also use \ifuseprefix to ensure that the name prefix is handled
 % properly. \actualoperator is the so-called actual operator, as
 % defined by the 'actual' specifier in the .ist file. The makeindex
-% program will use the part preceeding the \actualoperator
+% program will use the part preceding the \actualoperator
 % delimiter for sorting. The part after the delimiter is used as the
 % index is printed. Note that this is not specific to biblatex, see
 % the makeindex documentation for details.
@@ -1445,6 +1445,17 @@
 }
 
 % ------------------------------------------------------------------
+% NAMEHASH TEMPLATE
+% ------------------------------------------------------------------
+
+\DeclareNamehashTemplate{
+  \namepart[hashscope=full]{family}
+  \namepart[hashscope=full]{given}
+  \namepart[hashscope=full]{prefix}
+  \namepart[hashscope=full]{suffix}
+}
+
+% ------------------------------------------------------------------
 % SORTING
 % ------------------------------------------------------------------
 
@@ -1519,6 +1530,50 @@
   }
 }
 
+\DeclareSortingTemplate{ntd}{
+  \sort{
+    \field{presort}
+  }
+  \sort[final]{
+    \field{sortkey}
+  }
+  \sort{
+    \field{sortname}
+    \field{author}
+    \field{editor}
+    \field{translator}
+    \field{sorttitle}
+    \field{title}
+  }
+  \sort{
+    \field{sorttitle}
+    \field{title}
+  }
+  \sort{
+    \field{sortyear}
+    \field{year}
+  }
+  \sort{
+    \field{month}
+  }
+  \sort{
+    \field{day}
+  }
+  \sort{
+    \field{hour}
+  }
+  \sort{
+    \field{minute}
+  }
+  \sort{
+    \field{second}
+  }
+  \sort{
+    \field{volume}
+    \literal{0}
+  }
+}
+
 \DeclareSortingTemplate{nyt}{
   \sort{
     \field{presort}
@@ -1548,6 +1603,50 @@
   }
 }
 
+\DeclareSortingTemplate{ndt}{
+  \sort{
+    \field{presort}
+  }
+  \sort[final]{
+    \field{sortkey}
+  }
+  \sort{
+    \field{sortname}
+    \field{author}
+    \field{editor}
+    \field{translator}
+    \field{sorttitle}
+    \field{title}
+  }
+  \sort{
+    \field{sortyear}
+    \field{year}
+  }
+  \sort{
+    \field{month}
+  }
+  \sort{
+    \field{day}
+  }
+  \sort{
+    \field{hour}
+  }
+  \sort{
+    \field{minute}
+  }
+  \sort{
+    \field{second}
+  }
+  \sort{
+    \field{sorttitle}
+    \field{title}
+  }
+  \sort{
+    \field{volume}
+    \literal{0}
+  }
+}
+
 \DeclareSortingTemplate{nyvt}{
   \sort{
     \field{presort}
@@ -1566,6 +1665,50 @@
   \sort{
     \field{sortyear}
     \field{year}
+  }
+  \sort{
+    \field{volume}
+    \literal{0}
+  }
+  \sort{
+    \field{sorttitle}
+    \field{title}
+  }
+}
+
+\DeclareSortingTemplate{ndvt}{
+  \sort{
+    \field{presort}
+  }
+  \sort[final]{
+    \field{sortkey}
+  }
+  \sort{
+    \field{sortname}
+    \field{author}
+    \field{editor}
+    \field{translator}
+    \field{sorttitle}
+    \field{title}
+  }
+  \sort{
+    \field{sortyear}
+    \field{year}
+  }
+  \sort{
+    \field{month}
+  }
+  \sort{
+    \field{day}
+  }
+  \sort{
+    \field{hour}
+  }
+  \sort{
+    \field{minute}
+  }
+  \sort{
+    \field{second}
   }
   \sort{
     \field{volume}
@@ -1609,6 +1752,53 @@
   }
 }
 
+\DeclareSortingTemplate{andt}{
+  \sort{
+    \field{presort}
+  }
+  \sort{
+    \field{labelalpha}
+  }
+  \sort[final]{
+    \field{sortkey}
+  }
+  \sort{
+    \field{sortname}
+    \field{author}
+    \field{editor}
+    \field{translator}
+    \field{sorttitle}
+    \field{title}
+  }
+  \sort{
+    \field{sortyear}
+    \field{year}
+  }
+  \sort{
+    \field{month}
+  }
+  \sort{
+    \field{day}
+  }
+  \sort{
+    \field{hour}
+  }
+  \sort{
+    \field{minute}
+  }
+  \sort{
+    \field{second}
+  }
+  \sort{
+    \field{sorttitle}
+    \field{title}
+  }
+  \sort{
+    \field{volume}
+    \literal{0}
+  }
+}
+
 \DeclareSortingTemplate{anyvt}{
   \sort{
     \field{presort}
@@ -1630,6 +1820,53 @@
   \sort{
     \field{sortyear}
     \field{year}
+  }
+  \sort{
+    \field{volume}
+    \literal{0}
+  }
+  \sort{
+    \field{sorttitle}
+    \field{title}
+  }
+}
+
+\DeclareSortingTemplate{andvt}{
+  \sort{
+    \field{presort}
+  }
+  \sort{
+    \field{labelalpha}
+  }
+  \sort[final]{
+    \field{sortkey}
+  }
+  \sort{
+    \field{sortname}
+    \field{author}
+    \field{editor}
+    \field{translator}
+    \field{sorttitle}
+    \field{title}
+  }
+  \sort{
+    \field{sortyear}
+    \field{year}
+  }
+  \sort{
+    \field{month}
+  }
+  \sort{
+    \field{day}
+  }
+  \sort{
+    \field{hour}
+  }
+  \sort{
+    \field{minute}
+  }
+  \sort{
+    \field{second}
   }
   \sort{
     \field{volume}
@@ -1667,6 +1904,47 @@
   }
 }
 
+\DeclareSortingTemplate{dnt}{
+  \sort{
+    \field{presort}
+  }
+  \sort[final]{
+    \field{sortkey}
+  }
+  \sort{
+    \field{sortyear}
+    \field{year}
+    \literal{9999}
+  }
+  \sort{
+    \field{month}
+  }
+  \sort{
+    \field{day}
+  }
+  \sort{
+    \field{hour}
+  }
+  \sort{
+    \field{minute}
+  }
+  \sort{
+    \field{second}
+  }
+  \sort{
+    \field{sortname}
+    \field{author}
+    \field{editor}
+    \field{translator}
+    \field{sorttitle}
+    \field{title}
+  }
+  \sort{
+    \field{sorttitle}
+    \field{title}
+  }
+}
+
 \DeclareSortingTemplate{ydnt}{
   \sort{
     \field{presort}
@@ -1678,6 +1956,47 @@
     \field{sortyear}
     \field{year}
     \literal{9999}
+  }
+  \sort{
+    \field{sortname}
+    \field{author}
+    \field{editor}
+    \field{translator}
+    \field{sorttitle}
+    \field{title}
+  }
+  \sort{
+    \field{sorttitle}
+    \field{title}
+  }
+}
+
+\DeclareSortingTemplate{ddnt}{
+  \sort{
+    \field{presort}
+  }
+  \sort[final]{
+    \field{sortkey}
+  }
+  \sort[direction=descending]{
+    \field{sortyear}
+    \field{year}
+    \literal{9999}
+  }
+  \sort[direction=descending]{
+    \field{month}
+  }
+  \sort[direction=descending]{
+    \field{day}
+  }
+  \sort[direction=descending]{
+    \field{hour}
+  }
+  \sort[direction=descending]{
+    \field{minute}
+  }
+  \sort[direction=descending]{
+    \field{second}
   }
   \sort{
     \field{sortname}
@@ -2317,7 +2636,7 @@
 \newrobustcmd*{\Volcites}{\multivolcitecmd\Cites}
 \newrobustcmd*{\Pvolcites}{\multivolcitecmd\Parencites}
 \newrobustcmd*{\Fvolcites}{\multivolcitecmd\Footcites}
-\newrobustcmd*{\Ftvolcites}{\multivolcitecmd\Footcitetext}
+\newrobustcmd*{\Ftvolcites}{\multivolcitecmd\Footcitetexts}
 \newrobustcmd*{\Svolcites}{\multivolcitecmd\Smartcites}
 \newrobustcmd*{\Tvolcites}{\multivolcitecmd\Textcites}
 \newrobustcmd*{\Avolcites}{\multivolcitecmd\Autocites}

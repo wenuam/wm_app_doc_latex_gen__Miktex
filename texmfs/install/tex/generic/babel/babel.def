@@ -7,7 +7,7 @@
 %% babel.dtx  (with options: `core')
 %% 
 %%
-%% Copyright (C) 2012-2024 Javier Bezos and Johannes L. Braams.
+%% Copyright (C) 2012-2025 Javier Bezos and Johannes L. Braams.
 %% Copyright (C) 1989-2012 Johannes L. Braams and
 %%           any individual authors listed elsewhere in this file.
 %% All rights reserved.
@@ -32,7 +32,6 @@
 %% and covered by LPPL is defined by the unpacking scripts (with
 %% extension |.ins|) which are part of the distribution.
 %%
-
 \ifx\ldf@quit\@undefined\else
 \endinput\fi % Same line!
 \ifx\ProvidesFile\@undefined
@@ -40,8 +39,8 @@
     \wlog{File: #1 #4 #3 <#2>}%
     \let\ProvidesFile\@undefined}
 \fi
-\ProvidesFile{babel.def}[2024/01/07 v24.1 Babel common definitions]
-\ifx\AtBeginDocument\@undefined  % TODO. change test.
+\ProvidesFile{babel.def}[2025/12/11 v25.17 Babel common definitions]
+\ifx\AtBeginDocument\@undefined
   \def\@empty{}
 \def\loadlocalcfg#1{%
   \openin0#1.cfg
@@ -92,12 +91,13 @@
   \ifx#2\@empty\else\expandafter\zap@space\fi
   #2}
 \let\bbl@trace\@gobble
-\def\bbl@error#1#2{%
+\def\bbl@error#1{% Implicit #2#3#4
   \begingroup
-    \newlinechar=`\^^J
-    \def\\{^^J(babel) }%
-    \errhelp{#2}\errmessage{\\#1}%
-  \endgroup}
+    \catcode`\\=0   \catcode`\==12 \catcode`\`=12
+    \catcode`\^^M=5 \catcode`\%=14
+    \input errbabel.def
+  \endgroup
+  \bbl@error{#1}}
 \def\bbl@warning#1{%
   \begingroup
     \newlinechar=`\^^J
@@ -387,7 +387,6 @@
 \let\bbl@opt@shorthands\@nnil
 \def\bbl@ifshorthand#1#2#3{#2}%
 \let\bbl@language@opts\@empty
-\let\bbl@ensureinfo\@gobble
 \let\bbl@provide@locale\relax
 \ifx\babeloptionstrings\@undefined
   \let\bbl@opt@strings\@nnil
@@ -505,6 +504,13 @@
     \expandafter\bbl@fornext
   \fi}
 \def\bbl@foreach#1{\expandafter\bbl@vforeach\expandafter{#1}}
+\global\let\bbl@done\@empty
+\def\bbl@once#1#2{%
+  \bbl@xin@{,#1,}{,\bbl@done,}%
+  \ifin@\else
+    #2%
+    \xdef\bbl@done{\bbl@done,#1,}%
+  \fi}
 \def\bbl@replace#1#2#3{% in #1 -> repl #2 by #3
   \toks@{}%
   \def\bbl@replace@aux##1#2##2#2{%
@@ -535,7 +541,8 @@
         \def\bbl@tempc{%     Expanded an executed below as 'uplevel'
            \\\makeatletter % "internal" macros with @ are assumed
            \\\scantokens{%
-             \bbl@tempa\\\@namedef{\bbl@stripslash#1}\bbl@tempb{\bbl@tempe}}%
+             \bbl@tempa\\\@namedef{\bbl@stripslash#1}\bbl@tempb{\bbl@tempe}%
+             \noexpand\noexpand}%
            \catcode64=\the\catcode64\relax}%  Restore @
       \else
         \let\bbl@tempc\@empty  % Not \relax
@@ -595,8 +602,8 @@
     \toks@\expandafter{\bbl@tempc#3}%
     \expandafter\edef\csname extras\languagename\endcsname{\the\toks@}%
   \fi}
-\def\bbl@version{24.1}
-\def\bbl@date{2024/01/07}
+\def\bbl@version{25.17}
+\def\bbl@date{2025/12/11}
 \ifx\language\@undefined
   \csname newcount\endcsname\language
 \fi
@@ -712,80 +719,74 @@
   \expandafter\bbl@set@language\expandafter{\languagename}%
   \let\bbl@ifrestoring\@secondoftwo}
 \chardef\localeid\z@
-\def\bbl@id@last{0}    % No real need for a new counter
+\gdef\bbl@id@last{0}    % No real need for a new counter
 \def\bbl@id@assign{%
   \bbl@ifunset{bbl@id@@\languagename}%
     {\count@\bbl@id@last\relax
      \advance\count@\@ne
-     \bbl@csarg\chardef{id@@\languagename}\count@
-     \edef\bbl@id@last{\the\count@}%
+     \global\bbl@csarg\chardef{id@@\languagename}\count@
+     \xdef\bbl@id@last{\the\count@}%
      \ifcase\bbl@engine\or
        \directlua{
-         Babel = Babel or {}
-         Babel.locale_props = Babel.locale_props or {}
          Babel.locale_props[\bbl@id@last] = {}
          Babel.locale_props[\bbl@id@last].name = '\languagename'
+         Babel.locale_props[\bbl@id@last].vars = {}
         }%
       \fi}%
     {}%
     \chardef\localeid\bbl@cl{id@}}
-\expandafter\def\csname selectlanguage \endcsname#1{%
+\let\bbl@select@opts\@empty
+\expandafter\def\csname selectlanguage \endcsname{%
+  \@ifnextchar[\bbl@select@s{\bbl@select@s[]}}
+\def\bbl@select@s[#1]#2{%
+  \def\bbl@select@opts{#1}%
   \ifnum\bbl@hymapsel=\@cclv\let\bbl@hymapsel\tw@\fi
   \bbl@push@language
   \aftergroup\bbl@pop@language
-  \bbl@set@language{#1}}
+  \bbl@set@language{#2}}
+\let\endselectlanguage\relax
 \def\BabelContentsFiles{toc,lof,lot}
 \def\bbl@set@language#1{% from selectlanguage, pop@
-  % The old buggy way. Preserved for compatibility.
-  \edef\languagename{%
-    \ifnum\escapechar=\expandafter`\string#1\@empty
-    \else\string#1\@empty\fi}%
-  \ifcat\relax\noexpand#1%
-    \expandafter\ifx\csname date\languagename\endcsname\relax
-      \edef\languagename{#1}%
-      \let\localename\languagename
-    \else
-      \bbl@info{Using '\string\language' instead of 'language' is\\%
-                deprecated. If what you want is to use a\\%
-                macro containing the actual locale, make\\%
-                sure it does not not match any language.\\%
-                Reported}%
-      \ifx\scantokens\@undefined
-         \def\localename{??}%
-      \else
-        \scantokens\expandafter{\expandafter
-          \def\expandafter\localename\expandafter{\languagename}}%
-      \fi
-    \fi
-  \else
-    \def\localename{#1}% This one has the correct catcodes
-  \fi
+  % The old buggy way. Preserved for compatibility, but simplified
+  \edef\languagename{\expandafter\string#1\@empty}%
   \select@language{\languagename}%
+  \bbl@xin@{,main,}{,\bbl@select@opts,}%
+  \ifin@
+    \let\bbl@main@language\localename
+    \let\mainlocalename\localename
+  \fi
+  \let\bbl@select@opts\@empty
   % write to auxs
   \expandafter\ifx\csname date\languagename\endcsname\relax\else
     \if@filesw
-      \ifx\babel@aux\@gobbletwo\else % Set if single in the first, redundant
-        \bbl@savelastskip
-        \protected@write\@auxout{}{\string\babel@aux{\bbl@auxname}{}}%
-        \bbl@restorelastskip
+      \bbl@xin@{,noaux,}{,\bbl@select@opts,}%
+      \ifin@\else
+        \ifx\babel@aux\@gobbletwo\else % Set if single in the first, redundant
+          \bbl@savelastskip
+          \protected@write\@auxout{}{\string\babel@aux{\bbl@auxname}{}}%
+          \bbl@restorelastskip
+        \fi
       \fi
       \bbl@usehooks{write}{}%
     \fi
   \fi}
 \let\bbl@restorelastskip\relax
 \let\bbl@savelastskip\relax
-\newif\ifbbl@bcpallowed
-\bbl@bcpallowedfalse
-\def\select@language#1{% from set@, babel@aux
+\def\select@language#1{% from set@, babel@aux, babel@toc
   \ifx\bbl@selectorname\@empty
     \def\bbl@selectorname{select}%
-  % set hymap
   \fi
+  % set hymap
   \ifnum\bbl@hymapsel=\@cclv\chardef\bbl@hymapsel4\relax\fi
-  % set name
+  % set name (when coming from babel@aux)
   \edef\languagename{#1}%
   \bbl@fixname\languagename
-  % TODO. name@map must be here?
+  % define \localename when coming from set@, with a trick
+  \ifx\scantokens\@undefined
+    \def\localename{??}%
+  \else
+    \bbl@exp{\\\scantokens{\def\\\localename{\languagename}\\\noexpand}\relax}%
+  \fi
   \bbl@provide@locale
   \bbl@iflanguage\languagename{%
     \let\bbl@select@type\z@
@@ -793,14 +794,12 @@
 \def\babel@aux#1#2{%
   \select@language{#1}%
   \bbl@foreach\BabelContentsFiles{% \relax -> don't assume vertical mode
-    \@writefile{##1}{\babel@toc{#1}{#2}\relax}}}% TODO - plain?
+    \@writefile{##1}{\babel@toc{#1}{#2}\relax}}}%
 \def\babel@toc#1#2{%
   \select@language{#1}}
 \newif\ifbbl@usedategroup
 \let\bbl@savedextras\@empty
 \def\bbl@switch#1{%  from select@, foreign@
-  % make sure there is info for the language if so requested
-  \bbl@ensureinfo{#1}%
   % restore
   \originalTeX
   \expandafter\def\expandafter\originalTeX\expandafter{%
@@ -822,7 +821,7 @@
         \csname captions#1\endcsname\relax
       \fi
       \bbl@xin@{,date,}{,\bbl@select@opts,}%
-      \ifin@  % if \foreign... within \<lang>date
+      \ifin@  % if \foreign... within \<language>date
         \csname date#1\endcsname\relax
       \fi
     \fi
@@ -860,8 +859,14 @@
   \bbl@xin@{/u}{/\bbl@tempa}%
   \ifin@\else\bbl@xin@{/e}{/\bbl@tempa}\fi % elongated forms
   \ifin@\else\bbl@xin@{/k}{/\bbl@tempa}\fi % only kashida
-  \ifin@\else\bbl@xin@{/p}{/\bbl@tempa}\fi % padding (eg, Tibetan)
+  \ifin@\else\bbl@xin@{/p}{/\bbl@tempa}\fi % padding (e.g., Tibetan)
   \ifin@\else\bbl@xin@{/v}{/\bbl@tempa}\fi % variable font
+  % hyphenation - save mins
+  \babel@savevariable\lefthyphenmin
+  \babel@savevariable\righthyphenmin
+  \ifnum\bbl@engine=\@ne
+    \babel@savevariable\hyphenationmin
+  \fi
   \ifin@
     % unhyphenated/kashida/elongated/padding = allow stretching
     \language\l@unhyphenated
@@ -873,24 +878,25 @@
     % other = select patterns
     \bbl@patterns{#1}%
   \fi
-  % hyphenation - mins
-  \babel@savevariable\lefthyphenmin
-  \babel@savevariable\righthyphenmin
+  % hyphenation - set mins
   \expandafter\ifx\csname #1hyphenmins\endcsname\relax
     \set@hyphenmins\tw@\thr@@\relax
+    \@nameuse{bbl@hyphenmins@}%
   \else
     \expandafter\expandafter\expandafter\set@hyphenmins
       \csname #1hyphenmins\endcsname\relax
   \fi
-  % reset selector name
+  \@nameuse{bbl@hyphenmins@}%
+  \@nameuse{bbl@hyphenmins@\languagename}%
+  \@nameuse{bbl@hyphenatmin@}%
+  \@nameuse{bbl@hyphenatmin@\languagename}%
   \let\bbl@selectorname\@empty}
 \long\def\otherlanguage#1{%
   \def\bbl@selectorname{other}%
   \ifnum\bbl@hymapsel=\@cclv\let\bbl@hymapsel\thr@@\fi
   \csname selectlanguage \endcsname{#1}%
   \ignorespaces}
-\long\def\endotherlanguage{%
-  \global\@ignoretrue\ignorespaces}
+\long\def\endotherlanguage{\@ignoretrue\ignorespaces}
 \expandafter\def\csname otherlanguage*\endcsname{%
   \@ifnextchar[\bbl@otherlanguage@s{\bbl@otherlanguage@s[]}}
 \def\bbl@otherlanguage@s[#1]#2{%
@@ -915,7 +921,7 @@
     \bbl@usehooks{foreign}{}%
     \BabelText{#3}% Now in horizontal mode!
   \endgroup}
-\def\bbl@foreign@s#1#2{% TODO - \shapemode, \@setpar, ?\@@par
+\def\bbl@foreign@s#1#2{%
   \begingroup
     {\par}%
     \def\bbl@selectorname{foreign*}%
@@ -927,6 +933,9 @@
     \BabelText{#2}% Still in vertical mode!
     {\par}%
   \endgroup}
+\providecommand\BabelWrapText[1]{%
+   \def\bbl@tempa{\def\BabelText####1}%
+   \expandafter\bbl@tempa\expandafter{\BabelText{#1}}}
 \def\foreign@language#1{%
   % set name
   \edef\languagename{#1}%
@@ -935,7 +944,7 @@
     \bbl@usedategroupfalse
   \fi
   \bbl@fixname\languagename
-  % TODO. name@map here?
+  \let\localename\languagename
   \bbl@provide@locale
   \bbl@iflanguage\languagename{%
     \let\bbl@select@type\@ne
@@ -1015,10 +1024,7 @@
 \fi
 \ifx\originalTeX\@undefined\let\originalTeX\@empty\fi
 \ifx\babel@beginsave\@undefined\let\babel@beginsave\relax\fi
-\providecommand\setlocale{%
-  \bbl@error
-    {Not yet available}%
-    {Find an armchair, sit down and wait}}
+\providecommand\setlocale{\bbl@error{not-yet-available}{}{}{}}
 \let\uselocale\setlocale
 \let\locale\setlocale
 \let\selectlocale\setlocale
@@ -1032,6 +1038,7 @@
   \@nameuse{#2}%
   \edef\bbl@tempa{#1}%
   \bbl@sreplace\bbl@tempa{name}{}%
+  \bbl@sreplace\bbl@tempa{NAME}{}%
   \bbl@warning{%
     \@backslashchar#1 not set for '\languagename'. Please,\\%
     define it after the language has been loaded\\%
@@ -1046,12 +1053,7 @@
     They might not work as expected and their behavior\\%
     could change in the future.\\%
     Reported}}
-\def\@nolanerr#1{%
-  \bbl@error
-    {You haven't defined the language '#1' yet.\\%
-     Perhaps you misspelled it or your installation\\%
-     is not complete}%
-    {Your command will be ignored, type <return> to proceed}}
+\def\@nolanerr#1{\bbl@error{undefined-language}{#1}{}{}}
 \def\@nopatterns#1{%
   \bbl@warning
     {No hyphenation patterns were preloaded for\\%
@@ -1061,100 +1063,6 @@
      preloaded for \bbl@nulllanguage\space instead}}
 \let\bbl@usehooks\@gobbletwo
 \ifx\bbl@onlyswitch\@empty\endinput\fi
-  % Here ended switch.def
-\ifx\directlua\@undefined\else
-  \ifx\bbl@luapatterns\@undefined
-    \input luababel.def
-  \fi
-\fi
-\bbl@trace{Compatibility with language.def}
-\ifx\bbl@languages\@undefined
-  \ifx\directlua\@undefined
-    \openin1 = language.def % TODO. Remove hardcoded number
-    \ifeof1
-      \closein1
-      \message{I couldn't find the file language.def}
-    \else
-      \closein1
-      \begingroup
-        \def\addlanguage#1#2#3#4#5{%
-          \expandafter\ifx\csname lang@#1\endcsname\relax\else
-            \global\expandafter\let\csname l@#1\expandafter\endcsname
-              \csname lang@#1\endcsname
-          \fi}%
-        \def\uselanguage#1{}%
-        \input language.def
-      \endgroup
-    \fi
-  \fi
-  \chardef\l@english\z@
-\fi
-\def\addto#1#2{%
-  \ifx#1\@undefined
-    \def#1{#2}%
-  \else
-    \ifx#1\relax
-      \def#1{#2}%
-    \else
-      {\toks@\expandafter{#1#2}%
-       \xdef#1{\the\toks@}}%
-    \fi
-  \fi}
-\def\bbl@withactive#1#2{%
-  \begingroup
-    \lccode`~=`#2\relax
-    \lowercase{\endgroup#1~}}
-\def\bbl@redefine#1{%
-  \edef\bbl@tempa{\bbl@stripslash#1}%
-  \expandafter\let\csname org@\bbl@tempa\endcsname#1%
-  \expandafter\def\csname\bbl@tempa\endcsname}
-\@onlypreamble\bbl@redefine
-\def\bbl@redefine@long#1{%
-  \edef\bbl@tempa{\bbl@stripslash#1}%
-  \expandafter\let\csname org@\bbl@tempa\endcsname#1%
-  \long\expandafter\def\csname\bbl@tempa\endcsname}
-\@onlypreamble\bbl@redefine@long
-\def\bbl@redefinerobust#1{%
-  \edef\bbl@tempa{\bbl@stripslash#1}%
-  \bbl@ifunset{\bbl@tempa\space}%
-    {\expandafter\let\csname org@\bbl@tempa\endcsname#1%
-     \bbl@exp{\def\\#1{\\\protect\<\bbl@tempa\space>}}}%
-    {\bbl@exp{\let\<org@\bbl@tempa>\<\bbl@tempa\space>}}%
-    \@namedef{\bbl@tempa\space}}
-\@onlypreamble\bbl@redefinerobust
-\bbl@trace{Hooks}
-\newcommand\AddBabelHook[3][]{%
-  \bbl@ifunset{bbl@hk@#2}{\EnableBabelHook{#2}}{}%
-  \def\bbl@tempa##1,#3=##2,##3\@empty{\def\bbl@tempb{##2}}%
-  \expandafter\bbl@tempa\bbl@evargs,#3=,\@empty
-  \bbl@ifunset{bbl@ev@#2@#3@#1}%
-    {\bbl@csarg\bbl@add{ev@#3@#1}{\bbl@elth{#2}}}%
-    {\bbl@csarg\let{ev@#2@#3@#1}\relax}%
-  \bbl@csarg\newcommand{ev@#2@#3@#1}[\bbl@tempb]}
-\newcommand\EnableBabelHook[1]{\bbl@csarg\let{hk@#1}\@firstofone}
-\newcommand\DisableBabelHook[1]{\bbl@csarg\let{hk@#1}\@gobble}
-\def\bbl@usehooks{\bbl@usehooks@lang\languagename}
-\def\bbl@usehooks@lang#1#2#3{% Test for Plain
-  \ifx\UseHook\@undefined\else\UseHook{babel/*/#2}\fi
-  \def\bbl@elth##1{%
-    \bbl@cs{hk@##1}{\bbl@cs{ev@##1@#2@}#3}}%
-  \bbl@cs{ev@#2@}%
-  \ifx\languagename\@undefined\else % Test required for Plain (?)
-    \ifx\UseHook\@undefined\else\UseHook{babel/#1/#2}\fi
-    \def\bbl@elth##1{%
-      \bbl@cs{hk@##1}{\bbl@cs{ev@##1@#2@#1}#3}}%
-    \bbl@cs{ev@#2@#1}%
-  \fi}
-\def\bbl@evargs{,% <- don't delete this comma
-  everylanguage=1,loadkernel=1,loadpatterns=1,loadexceptions=1,%
-  adddialect=2,patterns=2,defaultcommands=0,encodedcommands=2,write=0,%
-  beforeextras=0,afterextras=0,stopcommands=0,stringprocess=0,%
-  hyphenation=2,initiateactive=3,afterreset=0,foreign=0,foreign*=0,%
-  beforestart=0,languagename=2,begindocument=1}
-\ifx\NewHook\@undefined\else % Test for Plain (?)
-  \def\bbl@tempa#1=#2\@@{\NewHook{babel/#1}}
-  \bbl@foreach\bbl@evargs{\bbl@tempa#1\@@}
-\fi
 \bbl@trace{Defining babelensure}
 \newcommand\babelensure[2][]{%
   \AddBabelHook{babel-ensure}{afterextras}{%
@@ -1219,6 +1127,94 @@
   \contentsname\listfigurename\listtablename\indexname\figurename
   \tablename\partname\enclname\ccname\headtoname\pagename\seename
   \alsoname\proofname\glossaryname}
+\bbl@trace{Short tags}
+\newcommand\babeltags[1]{%
+  \edef\bbl@tempa{\zap@space#1 \@empty}%
+  \def\bbl@tempb##1=##2\@@{%
+    \edef\bbl@tempc{%
+      \noexpand\newcommand
+      \expandafter\noexpand\csname ##1\endcsname{%
+        \noexpand\protect
+        \expandafter\noexpand\csname otherlanguage*\endcsname{##2}}
+      \noexpand\newcommand
+      \expandafter\noexpand\csname text##1\endcsname{%
+        \noexpand\foreignlanguage{##2}}}
+    \bbl@tempc}%
+  \bbl@for\bbl@tempa\bbl@tempa{%
+    \expandafter\bbl@tempb\bbl@tempa\@@}}
+\bbl@trace{Compatibility with language.def}
+\ifx\directlua\@undefined\else
+  \ifx\bbl@luapatterns\@undefined
+    \input luababel.def
+  \fi
+\fi
+\ifx\bbl@languages\@undefined
+  \ifx\directlua\@undefined
+    \openin1 = language.def
+    \ifeof1
+      \closein1
+      \message{I couldn't find the file language.def}
+    \else
+      \closein1
+      \begingroup
+        \def\addlanguage#1#2#3#4#5{%
+          \expandafter\ifx\csname lang@#1\endcsname\relax\else
+            \global\expandafter\let\csname l@#1\expandafter\endcsname
+              \csname lang@#1\endcsname
+          \fi}%
+        \def\uselanguage#1{}%
+        \input language.def
+      \endgroup
+    \fi
+  \fi
+  \chardef\l@english\z@
+\fi
+\def\addto#1#2{%
+  \ifx#1\@undefined
+    \def#1{#2}%
+  \else
+    \ifx#1\relax
+      \def#1{#2}%
+    \else
+      {\toks@\expandafter{#1#2}%
+       \xdef#1{\the\toks@}}%
+    \fi
+  \fi}
+\bbl@trace{Hooks}
+\newcommand\AddBabelHook[3][]{%
+  \bbl@ifunset{bbl@hk@#2}{\EnableBabelHook{#2}}{}%
+  \def\bbl@tempa##1,#3=##2,##3\@empty{\def\bbl@tempb{##2}}%
+  \expandafter\bbl@tempa\bbl@evargs,#3=,\@empty
+  \bbl@ifunset{bbl@ev@#2@#3@#1}%
+    {\bbl@csarg\bbl@add{ev@#3@#1}{\bbl@elth{#2}}}%
+    {\bbl@csarg\let{ev@#2@#3@#1}\relax}%
+  \bbl@csarg\newcommand{ev@#2@#3@#1}[\bbl@tempb]}
+\newcommand\EnableBabelHook[1]{\bbl@csarg\let{hk@#1}\@firstofone}
+\newcommand\DisableBabelHook[1]{\bbl@csarg\let{hk@#1}\@gobble}
+\def\bbl@usehooks{\bbl@usehooks@lang\languagename}
+\def\bbl@usehooks@lang#1#2#3{% Test for Plain
+  \ifx\UseHook\@undefined\else\UseHook{babel/*/#2}\fi
+  \def\bbl@elth##1{%
+    \bbl@cs{hk@##1}{\bbl@cs{ev@##1@#2@}#3}}%
+  \bbl@cs{ev@#2@}%
+  \ifx\languagename\@undefined\else % Test required for Plain (?)
+    \ifx\UseHook\@undefined\else\UseHook{babel/#1/#2}\fi
+    \def\bbl@elth##1{%
+      \bbl@cs{hk@##1}{\bbl@cs{ev@##1@#2@#1}#3}}%
+    \bbl@cs{ev@#2@#1}%
+  \fi}
+\def\bbl@evargs{,% <- don't delete this comma
+  everylanguage=1,loadkernel=1,loadpatterns=1,loadexceptions=1,%
+  adddialect=2,patterns=2,defaultcommands=0,encodedcommands=2,write=0,%
+  beforeextras=0,afterextras=0,stopcommands=0,stringprocess=0,%
+  hyphenation=2,initiateactive=3,afterreset=0,foreign=0,foreign*=0,%
+  beforestart=0,languagename=2,begindocument=1}
+\ifx\NewHook\@undefined\else % Test for Plain (?)
+  \def\bbl@tempa#1=#2\@@{\NewHook{babel/#1}}
+  \bbl@foreach\bbl@evargs{\bbl@tempa#1\@@}
+\fi
+\providecommand\PassOptionsToLocale[2]{%
+  \bbl@csarg\bbl@add@list{passto@#2}{#1}}
 \bbl@trace{Macros for setting language files up}
 \def\bbl@ldfinit{%
   \let\bbl@screset\@empty
@@ -1235,6 +1231,15 @@
   \catcode`\@=11\relax
   \chardef\eqcatcode=\catcode`\=
   \catcode`\==12\relax
+  \@ifpackagewith{babel}{ensureinfo=off}{}%
+    {\ifx\InputIfFileExists\@undefined\else
+       \bbl@ifunset{bbl@lname@#1}%
+         {{\let\bbl@ensuring\@empty % Flag used in babel-serbianc.tex
+          \def\languagename{#1}%
+          \bbl@id@assign
+          \bbl@load@info{#1}}}%
+        {}%
+     \fi}%
   \expandafter\if\expandafter\@backslashchar
                  \expandafter\@car\string#2\@nil
     \ifx#2\@undefined\else
@@ -1251,14 +1256,14 @@
   \catcode`\@=\atcatcode \let\atcatcode\relax
   \catcode`\==\eqcatcode \let\eqcatcode\relax
   \endinput}
-\def\bbl@afterldf#1{% TODO. Merge into the next macro? Unused elsewhere
+\def\bbl@afterldf{%
   \bbl@afterlang
   \let\bbl@afterlang\relax
   \let\BabelModifiers\relax
   \let\bbl@screset\relax}%
 \def\ldf@finish#1{%
   \loadlocalcfg{#1}%
-  \bbl@afterldf{#1}%
+  \bbl@afterldf
   \expandafter\main@language\expandafter{#1}%
   \catcode`\@=\atcatcode \let\atcatcode\relax
   \catcode`\==\eqcatcode \let\eqcatcode\relax}
@@ -1267,11 +1272,14 @@
 \@onlypreamble\ldf@finish
 \def\main@language#1{%
   \def\bbl@main@language{#1}%
-  \let\languagename\bbl@main@language % TODO. Set localename
+  \let\languagename\bbl@main@language
+  \let\localename\bbl@main@language
+  \let\mainlocalename\bbl@main@language
   \bbl@id@assign
   \bbl@patterns{\languagename}}
 \def\bbl@beforestart{%
   \def\@nolanerr##1{%
+    \bbl@carg\chardef{l@##1}\z@
     \bbl@warning{Undefined language '##1' in aux.\\Reported}}%
   \bbl@usehooks{beforestart}{}%
   \global\let\bbl@beforestart\relax}
@@ -1279,8 +1287,8 @@
   {\@nameuse{bbl@beforestart}}%  Group!
   \if@filesw
     \providecommand\babel@aux[2]{}%
-    \immediate\write\@mainaux{%
-      \string\providecommand\string\babel@aux[2]{}}%
+    \immediate\write\@mainaux{\unexpanded{%
+      \providecommand\babel@aux[2]{\global\let\babel@toc\@gobbletwo}}}%
     \immediate\write\@mainaux{\string\@nameuse{bbl@beforestart}}%
   \fi
   \expandafter\selectlanguage\expandafter{\bbl@main@language}%
@@ -1290,7 +1298,7 @@
     \global\let\babel@aux\@gobbletwo  % Also as flag
   \fi}
 \ifcase\bbl@engine\or
-  \AtBeginDocument{\pagedir\bodydir} % TODO - a better place
+  \AtBeginDocument{\pagedir\bodydir}
 \fi
 \def\select@language@x#1{%
   \ifcase\bbl@select@type
@@ -1299,10 +1307,14 @@
     \select@language{#1}%
   \fi}
 \bbl@trace{Shorhands}
+\def\bbl@withactive#1#2{%
+  \begingroup
+    \lccode`~=`#2\relax
+    \lowercase{\endgroup#1~}}
 \def\bbl@add@special#1{% 1:a macro like \", \?, etc.
   \bbl@add\dospecials{\do#1}% test @sanitize = \relax, for back. compat.
   \bbl@ifunset{@sanitize}{}{\bbl@add\@sanitize{\@makeother#1}}%
-  \ifx\nfss@catcodes\@undefined\else % TODO - same for above
+  \ifx\nfss@catcodes\@undefined\else
     \begingroup
       \catcode`#1\active
       \nfss@catcodes
@@ -1313,18 +1325,6 @@
         \endgroup
       \fi
   \fi}
-\def\bbl@remove@special#1{%
-  \begingroup
-    \def\x##1##2{\ifnum`#1=`##2\noexpand\@empty
-                 \else\noexpand##1\noexpand##2\fi}%
-    \def\do{\x\do}%
-    \def\@makeother{\x\@makeother}%
-  \edef\x{\endgroup
-    \def\noexpand\dospecials{\dospecials}%
-    \expandafter\ifx\csname @sanitize\endcsname\relax\else
-      \def\noexpand\@sanitize{\@sanitize}%
-    \fi}%
-  \x}
 \def\bbl@active@def#1#2#3#4{%
   \@namedef{#3#1}{%
     \expandafter\ifx\csname#2@sh@#1@\endcsname\relax
@@ -1427,7 +1427,7 @@
     \bbl@afterfi\csname#1@sh@#2@sel\endcsname
   \fi}
 \begingroup
-\bbl@ifunset{ifincsname}% TODO. Ugly. Correct? Only Plain?
+\bbl@ifunset{ifincsname}
   {\gdef\active@prefix#1{%
      \ifx\protect\@typeset@protect
      \else
@@ -1468,7 +1468,6 @@
     \csname bbl@normal@\string#1\endcsname}
 \def\bbl@firstcs#1#2{\csname#1\endcsname}
 \def\bbl@scndcs#1#2{\csname#2\endcsname}
-
 \def\babel@texpdf#1#2#3#4{%
   \ifx\texorpdfstring\@undefined
     \textormath{#1}{#3}%
@@ -1509,7 +1508,7 @@
     \expandafter\@firstoftwo
   \fi}
 \def\user@group{user}
-\def\language@group{english} % TODO. I don't like defaults
+\def\language@group{english}
 \def\system@group{system}
 \def\useshorthands{%
   \@ifstar\bbl@usesh@s{\bbl@usesh@x{}}}
@@ -1523,10 +1522,7 @@
      \initiate@active@char{#2}%
      #1%
      \bbl@activate{#2}}%
-    {\bbl@error
-       {I can't declare a shorthand turned off (\string#2)}
-       {Sorry, but you can't use shorthands which have been\\%
-        turned off in the package options}}}
+    {\bbl@error{shorthand-is-off}{}{#2}{}}}
 \def\user@language@group{user@\language@group}
 \def\bbl@set@user@generic#1#2{%
   \bbl@ifunset{user@generic@active#1}%
@@ -1546,7 +1542,11 @@
         \bbl@set@user@generic{\expandafter\string\@car#2\@nil}\bbl@tempb
     \fi
     \declare@shorthand{\bbl@tempb}{#2}{#3}}}
-\def\languageshorthands#1{\def\language@group{#1}}
+\def\languageshorthands#1{%
+  \bbl@ifsamestring{none}{#1}{}{%
+    \bbl@once{short-\localename-#1}{%
+      \bbl@info{'\localename' activates '#1' shorthands.\\Reported}}}%
+  \def\language@group{#1}}
 \def\aliasshorthand#1#2{%
   \bbl@ifshorthand{#2}%
     {\expandafter\ifx\csname active@char\string#2\endcsname\relax
@@ -1559,17 +1559,8 @@
          \bbl@activate{#2}%
        \fi
      \fi}%
-    {\bbl@error
-       {Cannot declare a shorthand turned off (\string#2)}
-       {Sorry, but you cannot use shorthands which have been\\%
-        turned off in the package options}}}
-\def\@notshorthand#1{%
-  \bbl@error{%
-    The character '\string #1' should be made a shorthand character;\\%
-    add the command \string\useshorthands\string{#1\string} to
-    the preamble.\\%
-    I will ignore your instruction}%
-   {You may proceed, but expect unexpected results}}
+    {\bbl@error{shorthand-is-off}{}{#2}{}}}
+\def\@notshorthand#1{\bbl@error{not-a-shorthand}{#1}{}{}}
 \newcommand*\shorthandon[1]{\bbl@switch@sh\@ne#1\@nnil}
 \DeclareRobustCommand*\shorthandoff{%
   \@ifstar{\bbl@shorthandoff\tw@}{\bbl@shorthandoff\z@}}
@@ -1577,10 +1568,7 @@
 \def\bbl@switch@sh#1#2{%
   \ifx#2\@nnil\else
     \bbl@ifunset{bbl@active@\string#2}%
-      {\bbl@error
-         {I can't switch '\string#2' on or off--not a shorthand}%
-         {This character is not a shorthand. Maybe you made\\%
-          a typing mistake? I will ignore your instruction.}}%
+      {\bbl@error{not-a-shorthand-b}{}{#2}{}}%
       {\ifcase#1%   off, on, off*
          \catcode`#212\relax
        \or
@@ -1673,6 +1661,8 @@
           You have more than once selected the attribute '##1'\\%
           for language #1. Reported}%
       \else
+        \bbl@info{Activated '##1' attribute for\\%
+          '\bbl@tempc'. Reported}%
         \bbl@exp{%
           \\\bbl@add@list\\\bbl@known@attribs{\bbl@tempc-##1}}%
         \edef\bbl@tempa{\bbl@tempc-##1}%
@@ -1682,9 +1672,7 @@
      \fi}}}
 \@onlypreamble\languageattribute
 \newcommand*{\@attrerr}[2]{%
-  \bbl@error
-    {The attribute #2 is unknown for language #1.}%
-    {Your command will be ignored, type <return> to proceed}}
+  \bbl@error{unknown-attribute}{#1}{#2}{}}
 \def\bbl@declare@ttribute#1#2#3{%
   \bbl@xin@{,#2,}{,\BabelModifiers,}%
   \ifin@
@@ -1741,6 +1729,24 @@
 \def\babel@savevariable#1{%
   \toks@\expandafter{\originalTeX #1=}%
   \bbl@exp{\def\\\originalTeX{\the\toks@\the#1\relax}}}
+\def\bbl@redefine#1{%
+  \edef\bbl@tempa{\bbl@stripslash#1}%
+  \expandafter\let\csname org@\bbl@tempa\endcsname#1%
+  \expandafter\def\csname\bbl@tempa\endcsname}
+\@onlypreamble\bbl@redefine
+\def\bbl@redefine@long#1{%
+  \edef\bbl@tempa{\bbl@stripslash#1}%
+  \expandafter\let\csname org@\bbl@tempa\endcsname#1%
+  \long\expandafter\def\csname\bbl@tempa\endcsname}
+\@onlypreamble\bbl@redefine@long
+\def\bbl@redefinerobust#1{%
+  \edef\bbl@tempa{\bbl@stripslash#1}%
+  \bbl@ifunset{\bbl@tempa\space}%
+    {\expandafter\let\csname org@\bbl@tempa\endcsname#1%
+     \bbl@exp{\def\\#1{\\\protect\<\bbl@tempa\space>}}}%
+    {\bbl@exp{\let\<org@\bbl@tempa>\<\bbl@tempa\space>}}%
+    \@namedef{\bbl@tempa\space}}
+\@onlypreamble\bbl@redefinerobust
 \def\bbl@frenchspacing{%
   \ifnum\the\sfcode`\.=\@m
     \let\bbl@nonfrenchspacing\relax
@@ -1777,21 +1783,6 @@
       \fi}%
     \bbl@fs@chars
   \fi\fi\fi}
-\bbl@trace{Short tags}
-\def\babeltags#1{%
-  \edef\bbl@tempa{\zap@space#1 \@empty}%
-  \def\bbl@tempb##1=##2\@@{%
-    \edef\bbl@tempc{%
-      \noexpand\newcommand
-      \expandafter\noexpand\csname ##1\endcsname{%
-        \noexpand\protect
-        \expandafter\noexpand\csname otherlanguage*\endcsname{##2}}
-      \noexpand\newcommand
-      \expandafter\noexpand\csname text##1\endcsname{%
-        \noexpand\foreignlanguage{##2}}}
-    \bbl@tempc}%
-  \bbl@for\bbl@tempa\bbl@tempa{%
-    \expandafter\bbl@tempb\bbl@tempa\@@}}
 \bbl@trace{Hyphens}
 \@onlypreamble\babelhyphenation
 \AtEndOfPackage{%
@@ -1818,6 +1809,23 @@
               {\csname bbl@hyphenation@\bbl@tempa\endcsname\space}%
             #2}}}%
     \fi}}
+\ifx\NewDocumentCommand\@undefined\else
+  \NewDocumentCommand\babelhyphenmins{sommo}{%
+    \IfNoValueTF{#2}%
+      {\protected@edef\bbl@hyphenmins@{\set@hyphenmins{#3}{#4}}%
+       \IfValueT{#5}{%
+         \protected@edef\bbl@hyphenatmin@{\hyphenationmin=#5\relax}}%
+       \IfBooleanT{#1}{%
+         \lefthyphenmin=#3\relax
+         \righthyphenmin=#4\relax
+         \IfValueT{#5}{\hyphenationmin=#5\relax}}}%
+      {\edef\bbl@tempb{\zap@space#2 \@empty}%
+       \bbl@for\bbl@tempa\bbl@tempb{%
+         \@namedef{bbl@hyphenmins@\bbl@tempa}{\set@hyphenmins{#3}{#4}}%
+         \IfValueT{#5}{%
+           \@namedef{bbl@hyphenatmin@\bbl@tempa}{\hyphenationmin=#5\relax}}}%
+       \IfBooleanT{#1}{\bbl@error{hyphenmins-args}{}{}{}}}}
+\fi
 \def\bbl@allowhyphens{\ifvmode\else\nobreak\hskip\z@skip\fi}
 \def\bbl@t@one{T1}
 \def\allowhyphens{\ifx\cf@encoding\bbl@t@one\else\bbl@allowhyphens\fi}
@@ -1826,9 +1834,9 @@
 \def\bbl@hyphen{%
   \@ifstar{\bbl@hyphen@i @}{\bbl@hyphen@i\@empty}}
 \def\bbl@hyphen@i#1#2{%
-  \bbl@ifunset{bbl@hy@#1#2\@empty}%
+  \lowercase{\bbl@ifunset{bbl@hy@#1#2\@empty}}%
     {\csname bbl@#1usehyphen\endcsname{\discretionary{#2}{}{#2}}}%
-    {\csname bbl@hy@#1#2\@empty\endcsname}}
+    {\lowercase{\csname bbl@hy@#1#2\@empty\endcsname}}}
 \def\bbl@usehyphen#1{%
   \leavevmode
   \ifdim\lastskip>\z@\mbox{#1}\else\nobreak#1\fi
@@ -1956,12 +1964,12 @@
     \def\bbl@sctest{%
       \bbl@xin@{,\bbl@opt@strings,}{,\bbl@sc@label,\bbl@sc@fontenc,}}%
   \fi
-  \ifx\bbl@opt@strings\@nnil         % ie, no strings key -> defaults
-  \else\ifx\bbl@opt@strings\relax    % ie, strings=encoded
+  \ifx\bbl@opt@strings\@nnil         % i.e., no strings key -> defaults
+  \else\ifx\bbl@opt@strings\relax    % i.e., strings=encoded
     \let\AfterBabelCommands\bbl@aftercmds
     \let\SetString\bbl@setstring
     \let\bbl@stringdef\bbl@encstring
-  \else       % ie, strings=value
+  \else       % i.e., strings=value
   \bbl@sctest
   \ifin@
     \let\AfterBabelCommands\bbl@aftercmds
@@ -1971,9 +1979,7 @@
   \bbl@scswitch
   \ifx\bbl@G\@empty
     \def\SetString##1##2{%
-      \bbl@error{Missing group for string \string##1}%
-        {You must assign strings to some category, typically\\%
-         captions or extras, but you set none}}%
+      \bbl@error{missing-group}{##1}{}{}}%
   \fi
   \ifx\@empty#1%
     \bbl@usehooks{defaultcommands}{}%
@@ -2007,10 +2013,10 @@
   \endgroup
   \bbl@scafter}
 \let\bbl@endcommands\EndBabelCommands
-\def\bbl@setstring#1#2{% eg, \prefacename{<string>}
+\def\bbl@setstring#1#2{% e.g., \prefacename{<string>}
   \bbl@forlang\bbl@tempa{%
     \edef\bbl@LC{\bbl@tempa\bbl@stripslash#1}%
-    \bbl@ifunset{\bbl@LC}% eg, \germanchaptername
+    \bbl@ifunset{\bbl@LC}% e.g., \germanchaptername
       {\bbl@exp{%
          \global\\\bbl@add\<\bbl@G\bbl@tempa>{\\\bbl@scset\\#1\<\bbl@LC>}}}%
       {}%
@@ -2052,7 +2058,7 @@
     \bbl@xin@{,}{\bbl@language@opts}%
     \chardef\bbl@opt@hyphenmap\ifin@4\else\@ne\fi
   \fi}
-\newcommand\setlocalecaption{%  TODO. Catch typos.
+\newcommand\setlocalecaption{%
   \@ifstar\bbl@setcaption@s\bbl@setcaption@x}
 \def\bbl@setcaption@x#1#2#3{%  language caption-name string
   \bbl@trim@def\bbl@tempa{#2}%
@@ -2293,14 +2299,8 @@
 \or
   \input xebabel.def
 \fi
-\providecommand\babelfont{%
-  \bbl@error
-    {This macro is available only in LuaLaTeX and XeLaTeX.}%
-    {Consider switching to these engines.}}
-\providecommand\babelprehyphenation{%
-  \bbl@error
-    {This macro is available only in LuaLaTeX.}%
-    {Consider switching to that engine.}}
+\providecommand\babelfont{\bbl@error{only-lua-xe}{}{}{}}
+\providecommand\babelprehyphenation{\bbl@error{only-lua}{}{}{}}
 \ifx\babelposthyphenation\@undefined
   \let\babelposthyphenation\babelprehyphenation
   \let\babelpatterns\babelprehyphenation
