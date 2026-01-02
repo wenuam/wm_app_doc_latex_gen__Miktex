@@ -31,6 +31,7 @@ List of currently available versions (as branches) :
 
 | Version and date	|
 | :---				|
+| 25.12_251231		|
 | 24.1_240128		|
 
 The tag `latest` points to the most recent version.
